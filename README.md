@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/manniche-labs/awesome-european-dev/main/.github/banner.svg" alt="" width="100%">
+
 <div align="center">
 
   # 🧾 receipt-scanner-core
