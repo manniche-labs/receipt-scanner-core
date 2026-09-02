@@ -1,0 +1,34 @@
+{
+  "name": "@manniche-labs/receipt-scanner-core",
+  "version": "1.0.0",
+  "description": "European receipt parsing schemas, Vision AI prompts, and normalization utilities for DE/DK (German 7%/19% MwSt., Danish 25% Moms)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "demo": "npx tsx examples/demo.ts",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "receipt", "ocr", "vision-ai", "gemini", "openai", "germany", "denmark",
+    "mwst", "vat", "moms", "fintech", "parsing", "typescript", "eur", "dkk"
+  ],
+  "author": "Mikkel Manniche <kontakt@mikkelmanniche.dk> (https://mikkelmanniche.dk)",
+  "license": "MIT",
+  "homepage": "https://github.com/manniche-labs/receipt-scanner-core",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manniche-labs/receipt-scanner-core.git"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
