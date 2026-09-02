@@ -1,13 +1,15 @@
 # Security Policy
 
-## Supported Versions
+## IMPORTANT: Do not report API keys here
 
-| Version | Supported |
-| :------ | :-------- |
-| 1.x     | ✅        |
+Never include Vision AI API keys, personal data, or receipt images in bug reports.
 
 ## Reporting a Vulnerability
 
-Please open a private security advisory on GitHub. Do not include API keys or secrets in reports.
+Open a GitHub private security advisory. We respond within 48 hours.
 
-We respond within 48 hours.
+## Supported Versions
+
+| Version | Supported |
+|:--------|:---------|
+| 1.x     | ✅        |
