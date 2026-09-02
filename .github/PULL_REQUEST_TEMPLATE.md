@@ -1,19 +1,18 @@
 ## Summary
 
-Brief description of this PR.
-
 ## Changes
 
-- 
+-
 
-## Type of Change
+## Type
 
 - [ ] Bug fix
-- [ ] New feature (store chain, locale, prompt improvement)
+- [ ] New locale/chain support
+- [ ] Prompt improvement
 - [ ] Documentation
 
 ## Checklist
 
 - [ ] No API keys or sensitive data included
-- [ ] TypeScript types are updated if schema changed
-- [ ] Mock data added for new locales/chains
+- [ ] TypeScript types updated if schema changed
+- [ ] Mock data added for new locales
