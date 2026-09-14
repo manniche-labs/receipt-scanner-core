@@ -4,7 +4,7 @@
 
   # 🧾 receipt-scanner-core
 
-  **Battle-tested European receipt parsing — TypeScript schemas, Vision AI prompt templates, and smart normalization for German 🇩🇪 and Danish 🇩🇰 receipts.**
+  **European receipt parsing — TypeScript schemas, Vision AI prompt templates, and smart normalization for German 🇩🇪 and Danish 🇩🇰 receipts.**
 
   <br />
 
@@ -16,7 +16,7 @@
 
   <br />
 
-  <sub>Built and battle-tested by <b><a href="https://github.com/mikkelmanniche-dk">Mikkel Manniche</a></b> at <b><a href="https://github.com/manniche-labs">manniche labs</a></b> • <a href="https://mikkelmanniche.dk">mikkelmanniche.dk</a></sub>
+  <sub>Built by <b><a href="https://github.com/mikkelmanniche-dk">Mikkel Manniche</a></b> at <b><a href="https://github.com/manniche-labs">manniche labs</a></b> • <a href="https://mikkelmanniche.dk">mikkelmanniche.dk</a></sub>
 
 </div>
 
@@ -24,13 +24,13 @@
 
 ## ✨ What Is This?
 
-`receipt-scanner-core` is the parsing and normalization engine behind a production receipt-scanning application that processes **real-world German and Danish retail receipts** using Vision AI (Gemini, GPT-4o, Claude).
+`receipt-scanner-core` is the parsing and normalization engine behind a production receipt-scanning application that processes **real-world German and Danish retail receipts** using Vision AI (Gemini, GPT-4o).
 
 It provides:
 - 📐 **Type-safe TypeScript schemas** for every field on a European retail receipt
-- 🤖 **Production-tested Vision AI prompt templates** that produce consistent JSON from any vision model
+- 🤖 **Vision AI prompt templates** that ask the model for consistent JSON
 - 🔢 **European number normalization** (`14,99 €` → `14.99`, `1.299,00` → `1299.00`)
-- 🏪 **Store recognition engine** covering 30+ German & Danish retail chains
+- 🏪 **Store recognition engine** covering 25+ German & Danish retail chains
 - 🧮 **German MwSt. calculation** (A=19%, B=7%) and **Danish Moms** (25% flat)
 - 🧪 **Mock receipt data** for offline testing — no API key needed
 
@@ -63,6 +63,7 @@ It provides:
 Complete TypeScript types for every field in a European receipt:
 
 ```typescript
+// Not yet published to npm: clone the repo and run `npm run build`, then import from ./dist
 import type { Receipt, ReceiptLineItem, TaxBreakdown, Currency } from "@manniche-labs/receipt-scanner-core";
 
 const receipt: Receipt = {
@@ -97,13 +98,13 @@ const receipt: Receipt = {
 - `MerchantInfo` — Store chain, address, Tax ID (Steuernummer / CVR)
 - `PaymentInfo` — Payment method, amount tendered, change, card last 4
 - `Currency` — `"EUR" | "DKK"`
-- `StoreChain` — 30+ named store chains (strongly typed)
+- `StoreChain` — named store chains (strongly typed)
 - `TransactionCategory` — Budget categories (groceries, dining, pharmacy, etc.)
 
 ---
 
 ### `src/prompt.ts` — Vision AI Prompt Templates
-Production-tested system and user prompts that work with **any Vision AI model**:
+System and user prompts for Vision AI models (examples for OpenAI and Gemini):
 
 ```typescript
 import { buildReceiptPromptMessages, buildGeminiParts } from "@manniche-labs/receipt-scanner-core";
@@ -123,9 +124,9 @@ const result = await model.generateContent({
   generationConfig: { responseMimeType: "application/json" },
 });
 
-// ── Anthropic Claude ─────────────────────────────────────────────────────────
-const messages = buildReceiptPromptMessages(imageBase64, "EUR");
-// Use messages[0].content as system and messages[1].content as the user message
+// Anthropic Claude: the user message uses OpenAI's `image_url` block, which the
+// Anthropic API does not accept. Reuse the prompt text, but send the image as an
+// Anthropic `image` block with a base64 `source`.
 ```
 
 **What makes these prompts special:**
@@ -178,7 +179,7 @@ calcTaxFromGross(176.80, 25) // → { net: 141.44, tax: 35.36 } (DK Moms)
 ---
 
 ### `src/parse.ts` — JSON Response Parser
-Converts raw Vision AI model output into a strongly-typed `Receipt` with full error handling:
+Converts raw Vision AI model output into a strongly-typed `Receipt` and returns errors instead of throwing:
 
 ```typescript
 import { parseReceiptResponse } from "@manniche-labs/receipt-scanner-core";

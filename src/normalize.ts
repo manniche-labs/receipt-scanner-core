@@ -29,42 +29,45 @@ import type { Currency, StoreCountry, TransactionCategory, StoreChain } from "./
  * @param raw - Raw string from OCR/vision model (e.g. "14,99", "1.299,00")
  * @returns Normalized float, or null if unparseable
  */
-export function parseEuropeanNumber(raw: string | null | undefined): number | null {
-  if (!raw) return null;
+export function parseEuropeanNumber(raw: unknown): number | null {
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+  if (typeof raw !== "string" || !raw.trim()) return null;
 
-  // Strip currency symbols and whitespace
-  const cleaned = raw
-    .replace(/[€$£¥kr\.DKK EUR]+/gi, "")
-    .replace(/\s+/g, "")
-    .trim();
+  // Strip currency tokens as whole words, never bare dots (they may be decimals)
+  let cleaned = raw
+    .replace(/€|\$|£|¥|\bkr\.?|\bDKK\b|\bEUR\b/gi, "")
+    .replace(/\s+/g, "");
 
+  // Discounts appear as "-1,49" or, on many German tills, "1,49-"
+  const negative = /^-|-$/.test(cleaned);
+  cleaned = cleaned.replace(/^-|-$/g, "");
   if (!cleaned) return null;
 
-  // Pattern 1: German/Danish thousands + decimal comma: "1.299,99" → 1299.99
+  const value = parseUnsigned(cleaned);
+  if (value === null) return null;
+  return negative ? -value : value;
+}
+
+function parseUnsigned(cleaned: string): number | null {
+  // German/Danish thousands + decimal comma: "1.299,99" → 1299.99
   if (/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/.test(cleaned)) {
     return parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
   }
-
-  // Pattern 2: Simple decimal comma, no thousands sep: "14,99" → 14.99
-  if (/^\d+(,\d{1,2})$/.test(cleaned)) {
+  // Simple decimal comma: "14,99" → 14.99
+  if (/^\d+,\d{1,2}$/.test(cleaned)) {
     return parseFloat(cleaned.replace(",", "."));
   }
-
-  // Pattern 3: Danish/German with thousands dot, no decimal: "1.299" → 1299
-  if (/^\d{1,3}(\.\d{3})+$/.test(cleaned)) {
-    return parseFloat(cleaned.replace(/\./g, ""));
-  }
-
-  // Pattern 4: Standard English decimal "14.99" — used by some German POS systems
+  // English decimal "14.99" (checked before thousands-only so "1.299" stays ambiguous-safe below)
   if (/^\d+\.\d{1,2}$/.test(cleaned)) {
     return parseFloat(cleaned);
   }
-
-  // Pattern 5: Integer "5" or "100"
+  // Thousands dot, no decimal: "1.299" → 1299
+  if (/^\d{1,3}(\.\d{3})+$/.test(cleaned)) {
+    return parseFloat(cleaned.replace(/\./g, ""));
+  }
   if (/^\d+$/.test(cleaned)) {
     return parseInt(cleaned, 10);
   }
-
   return null;
 }
 
@@ -98,23 +101,32 @@ export function normalizeDate(raw: string | null | undefined): string | null {
   const s = raw.trim();
 
   // Already ISO: YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return toIsoDate(iso[1], iso[2], iso[3]);
 
   // DD.MM.YYYY or DD/MM/YYYY
   const dmy = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
   if (dmy) {
     const [, d, m, y] = dmy;
-    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    return toIsoDate(y, m, d);
   }
 
   // DD.MM.YY (short year — assume 2000s)
   const dmyShort = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{2})$/);
   if (dmyShort) {
     const [, d, m, y] = dmyShort;
-    return `20${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    return toIsoDate(`20${y}`, m, d);
   }
 
   return null;
+}
+
+/** Returns YYYY-MM-DD, or null when the date does not exist (e.g. 31.02.2026). */
+function toIsoDate(year: string, month: string, day: string): string | null {
+  const y = Number(year), m = Number(month), d = Number(day);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return null;
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -125,8 +137,13 @@ export function normalizeDate(raw: string | null | undefined): string | null {
  * Detects the store chain from raw OCR text or store name.
  * Covers major German and Danish supermarket, drugstore, and dining chains.
  */
-export function detectStoreChain(rawName: string): StoreChain {
+export function detectStoreChain(rawName: string, currency?: Currency): StoreChain {
   const n = rawName.toLowerCase();
+  const isDanish = currency === "DKK" || /\bdk\b|danmark|denmark/.test(n);
+
+  // Chains that exist in both countries: decide by currency or name
+  if (/\bnetto\b/.test(n)) return isDanish ? "netto_dk" : "netto_de";
+  if (/\baldi\b/.test(n) && isDanish) return "aldi_dk";
 
   // German grocery/discount
   if (/\blidl\b/.test(n)) return "lidl";
@@ -137,7 +154,6 @@ export function detectStoreChain(rawName: string): StoreChain {
   if (/\baldi\b.*nord/.test(n)) return "aldi_nord";
   if (/\baldi\b/.test(n)) return "aldi_sued"; // default to Süd in Bavaria/Munich
   if (/\bpenny\b/.test(n)) return "penny";
-  if (/\bnetto\b/.test(n) && !/dk/.test(n)) return "netto_de";
 
   // German drugstore
   if (/\bdm[-\s]drogerie|\bdm\b/.test(n)) return "dm_drogerie";
@@ -165,7 +181,6 @@ export function detectStoreChain(rawName: string): StoreChain {
   if (/\bmeny\b/.test(n)) return "meny";
   if (/\birma\b/.test(n)) return "irma";
   if (/\bkvickly\b/.test(n)) return "kvickly";
-  if (/\bnetto\b.*dk/.test(n)) return "netto_dk";
   if (/\bjysk\b/.test(n)) return "jysk";
 
   return "unknown";

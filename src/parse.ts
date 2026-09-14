@@ -40,7 +40,11 @@ export function parseReceiptResponse(
       .replace(/^```\s*/i, "")
       .replace(/```\s*$/i, "")
       .trim();
-    raw = JSON.parse(cleaned);
+    const parsed: unknown = JSON.parse(cleaned);
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("not an object");
+    }
+    raw = parsed as Record<string, unknown>;
   } catch {
     return {
       success: false,
@@ -56,14 +60,14 @@ export function parseReceiptResponse(
   // ── Merchant ──────────────────────────────────────────────────────────────
   const merchantRaw = (raw.merchant as Record<string, unknown>) ?? {};
   const rawName = String(merchantRaw.rawName ?? merchantRaw.store ?? "Unknown");
-  const chain = detectStoreChain(rawName);
 
   // ── Currency & Country ────────────────────────────────────────────────────
   const currency = (raw.currency as string ?? "EUR") === "DKK" ? "DKK" as const : "EUR" as const;
+  const chain = detectStoreChain(rawName, currency);
   const country = detectCountry(currency, chain);
 
   // ── Total ─────────────────────────────────────────────────────────────────
-  const total = parseEuropeanNumber(String(raw.total ?? "0"));
+  const total = parseEuropeanNumber(raw.total ?? 0);
   if (total === null) {
     errors.push("Could not parse total amount.");
   }
@@ -72,14 +76,16 @@ export function parseReceiptResponse(
   const date = normalizeDate(raw.date as string ?? null);
 
   // ── Items ─────────────────────────────────────────────────────────────────
-  const rawItems = Array.isArray(raw.items) ? raw.items : [];
+  const rawItems = Array.isArray(raw.items)
+    ? raw.items.filter((item): item is Record<string, unknown> => item !== null && typeof item === "object")
+    : [];
   const items: ReceiptLineItem[] = rawItems.map((item: Record<string, unknown>, i: number) => {
-    const price = parseEuropeanNumber(String(item.price ?? "0"));
+    const price = parseEuropeanNumber(item.price ?? 0);
     if (price === null) errors.push(`Item[${i}] "${item.name}": could not parse price.`);
     return {
       name: String(item.name ?? `Item ${i + 1}`),
       price: price ?? 0,
-      unitPrice: parseEuropeanNumber(String(item.unitPrice ?? "")) ?? null,
+      unitPrice: parseEuropeanNumber(item.unitPrice) ?? null,
       quantity: item.quantity != null ? Number(item.quantity) : null,
       qtyInfo: item.qtyInfo ? String(item.qtyInfo) : null,
       taxGroup: item.taxGroup ? String(item.taxGroup) : null,
@@ -95,8 +101,8 @@ export function parseReceiptResponse(
   const paymentRaw = (raw.payment as Record<string, unknown>) ?? {};
   const payment = {
     method: (paymentRaw.method as string ?? "unknown") as Receipt["payment"]["method"],
-    amountTendered: parseEuropeanNumber(String(paymentRaw.amountTendered ?? "")) ?? null,
-    changeGiven: parseEuropeanNumber(String(paymentRaw.changeGiven ?? "")) ?? null,
+    amountTendered: parseEuropeanNumber(paymentRaw.amountTendered) ?? null,
+    changeGiven: parseEuropeanNumber(paymentRaw.changeGiven) ?? null,
     cardLastFour: paymentRaw.cardLastFour ? String(paymentRaw.cardLastFour) : null,
   };
 
@@ -113,17 +119,17 @@ export function parseReceiptResponse(
       country,
     },
     items,
-    subtotal: parseEuropeanNumber(String(raw.subtotal ?? "")) ?? null,
-    totalDiscount: parseEuropeanNumber(String(raw.totalDiscount ?? "")) ?? null,
+    subtotal: parseEuropeanNumber(raw.subtotal) ?? null,
+    totalDiscount: parseEuropeanNumber(raw.totalDiscount) ?? null,
     total: total ?? 0,
     currency,
     taxBreakdown: Array.isArray(raw.taxBreakdown)
       ? raw.taxBreakdown.map((t: Record<string, unknown>) => ({
           label: String(t.label ?? ""),
           rate: Number(t.rate ?? 0),
-          net: parseEuropeanNumber(String(t.net ?? "0")) ?? 0,
-          tax: parseEuropeanNumber(String(t.tax ?? "0")) ?? 0,
-          gross: parseEuropeanNumber(String(t.gross ?? "0")) ?? 0,
+          net: parseEuropeanNumber(t.net ?? 0) ?? 0,
+          tax: parseEuropeanNumber(t.tax ?? 0) ?? 0,
+          gross: parseEuropeanNumber(t.gross ?? 0) ?? 0,
         }))
       : [],
     payment,
