@@ -14,11 +14,25 @@
   "scripts": {
     "build": "tsc",
     "demo": "npx tsx examples/demo.ts",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "npx tsx --test test/*.test.ts"
   },
   "keywords": [
-    "receipt", "ocr", "vision-ai", "gemini", "openai", "germany", "denmark",
-    "mwst", "vat", "moms", "fintech", "parsing", "typescript", "eur", "dkk"
+    "receipt",
+    "ocr",
+    "vision-ai",
+    "gemini",
+    "openai",
+    "germany",
+    "denmark",
+    "mwst",
+    "vat",
+    "moms",
+    "fintech",
+    "parsing",
+    "typescript",
+    "eur",
+    "dkk"
   ],
   "author": "Mikkel Manniche <kontakt@mikkelmanniche.dk> (https://mikkelmanniche.dk)",
   "license": "MIT",
