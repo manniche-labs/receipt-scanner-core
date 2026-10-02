@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 10" preserveAspectRatio="none">
+  <defs>
+    <clipPath id="clip">
+      <rect width="1200" height="10"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clip)">
+    <!-- Diagonal stripes: each parallelogram is 200px wide, height 10, skewed -->
+    <polygon points="0,0 220,0 210,10 -10,10" fill="#F5A623"/>
+    <polygon points="210,0 420,0 410,10 200,10" fill="#E8534A"/>
+    <polygon points="410,0 620,0 610,10 400,10" fill="#8B5CF6"/>
+    <polygon points="610,0 820,0 810,10 600,10" fill="#3B82F6"/>
+    <polygon points="810,0 1020,0 1010,10 800,10" fill="#10B981"/>
+    <polygon points="1010,0 1220,0 1210,10 1000,10" fill="#F5A623"/>
+  </g>
+</svg>
