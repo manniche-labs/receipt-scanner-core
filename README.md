@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/manniche-labs/awesome-european-dev/main/.github/banner.svg" alt="" width="100%">
+<img src=".github/banner.svg" alt="" width="100%">
 
 <div align="center">
 
@@ -8,9 +8,8 @@
 
   <br />
 
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-  [![Project Views](https://komarev.com/ghpvc/?username=manniche-labs-receipt-scanner-core&color=2563eb&style=flat-square&label=PROJECT+VIEWS)](https://github.com/manniche-labs/receipt-scanner-core)
   [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/manniche-labs/receipt-scanner-core/pulls)
   [![Studio](https://img.shields.io/badge/Studio-manniche_labs-0f0f0f?style=flat-square&logo=github&logoColor=white)](https://github.com/manniche-labs)
 
@@ -24,13 +23,13 @@
 
 ## ✨ What Is This?
 
-`receipt-scanner-core` is the parsing and normalization engine behind a production receipt-scanning application that processes **real-world German and Danish retail receipts** using Vision AI (Gemini, GPT-4o).
+`receipt-scanner-core` is a TypeScript toolkit for reading **German and Danish retail receipts** with Vision AI models (Gemini, GPT-4o). You bring the model call; it supplies the types, the prompts, the normalization and the parsing.
 
 It provides:
 - 📐 **Type-safe TypeScript schemas** for every field on a European retail receipt
 - 🤖 **Vision AI prompt templates** that ask the model for consistent JSON
 - 🔢 **European number normalization** (`14,99 €` → `14.99`, `1.299,00` → `1299.00`)
-- 🏪 **Store recognition engine** covering 25+ German & Danish retail chains
+- 🏪 **Store recognition** for 25+ named German & Danish retail chains
 - 🧮 **German MwSt. calculation** (A=19%, B=7%) and **Danish Moms** (25% flat)
 - 🧪 **Mock receipt data** for offline testing — no API key needed
 
@@ -59,11 +58,13 @@ It provides:
 
 ## 📦 Core Modules
 
+> [!NOTE]
+> Not published to npm yet. Clone the repo, run `npm install && npm run build`, and import from `./dist`. The examples below use the package name `@manniche-labs/receipt-scanner-core` it will have once published.
+
 ### `src/types.ts` — Type-Safe Schemas
 Complete TypeScript types for every field in a European receipt:
 
 ```typescript
-// Not yet published to npm: clone the repo and run `npm run build`, then import from ./dist
 import type { Receipt, ReceiptLineItem, TaxBreakdown, Currency } from "@manniche-labs/receipt-scanner-core";
 
 const receipt: Receipt = {
@@ -204,7 +205,9 @@ if (result.success) {
 
 ---
 
-## 🧪 Run Demo (No API Key Required)
+## 🧪 Run the Demo (No API Key Required)
+
+The demo runs the parser on built-in mock receipts. It does not call any model.
 
 ```bash
 git clone https://github.com/manniche-labs/receipt-scanner-core.git
@@ -213,42 +216,29 @@ npm install
 npm run demo
 ```
 
-Output:
+Output (first receipt of four):
 ```
 ╔══════════════════════════════════════════════════════════╗
 ║     receipt-scanner-core — European Receipt Parser Demo ║
 ╚══════════════════════════════════════════════════════════╝
 
-─── 🇩🇪 Lidl München ──────────────────────────────────────
+─── 🇩🇪 Lidl München ───────────────────────────────
   🏪 Store:    Lidl [lidl] DE
   📅 Date:     2026-09-02 at 18:34
   🛒 Items:    5 line items
-               Weizenbrot: 1,49 € [MwSt. B]
-               Vollmilch 3,5%: 0,99 € [MwSt. B]
-               2x Chicken Wings: 5,99 € [MwSt. B]
-               Spülmittel: 0,95 € [MwSt. A]
-             🏷️ Lidl Plus Rabatt: -1,00 €
+             1x Weizenbrot: 1,49 € [MwSt. B]
+             1x Vollmilch 3,5%: 0,99 € [MwSt. B]
+             2x Chicken Wings: 5,99 € [MwSt. B]
+             1x Spülmittel: 0,95 € [MwSt. A]
+              🏷️Lidl Plus Rabatt: -1,00 € [MwSt. B]
   💳 Payment:  contactless •••• 4821
   💰 Total:    8,42 €
   🧾 Tax:      A(19%): 0,15 € | B(7%): 0,49 €
   📂 Category: groceries
   ✅ Confidence: 97%
-
-─── 🇩🇰 Føtex Nørresundby ────────────────────────────────
-  🏪 Store:    føtex [foetex] DK
-  📅 Date:     2026-08-30 at 10:22
-  🛒 Items:    5 line items
-               Rugbrød 750g: 22,95 kr.
-               Letmælk 1L: 8,95 kr.
-               Oksekød hakket 400g: 39,95 kr.
-               Klorbleer 38 stk: 119,95 kr.
-             🏷️ Club Matas rabat: -15,00 kr.
-  💳 Payment:  mobile_pay
-  💰 Total:    176,80 kr.
-  🧾 Tax:      MOMS 25%(25%): 35,36 kr.
-  📂 Category: groceries
-  ✅ Confidence: 98%
 ```
+
+It continues with mock receipts from Rewe, Føtex and Netto.
 
 ---
 
@@ -260,8 +250,6 @@ Issues, feature requests, and pull requests are welcome! If this library saves y
 
 ## 👨‍💻 Maintainer
 
-* **Engineering Studio:** [manniche labs](https://github.com/manniche-labs)
-* **Lead Engineer:** [Mikkel Manniche](https://github.com/mikkelmanniche-dk)
-* **Platform:** [mikkelmanniche.dk](https://mikkelmanniche.dk)
+[Mikkel Manniche](https://github.com/mikkelmanniche-dk) at [manniche labs](https://github.com/manniche-labs) · [mikkelmanniche.dk](https://mikkelmanniche.dk)
 
 License: [MIT](LICENSE)
